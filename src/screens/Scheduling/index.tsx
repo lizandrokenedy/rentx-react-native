@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { StatusBar } from "react-native";
 import { useTheme } from "styled-components";
 import BackButton from "../../components/BackButton";
@@ -23,16 +23,40 @@ import {
   Footer,
 } from "./styles";
 import Button from "../../components/Button";
-import Calendar from "../../components/Calendar";
+import Calendar, { IDayProps, IMarkedDateProps } from "../../components/Calendar";
+import { generateInterval } from "../../components/Calendar/generateInterval";
 
 export default function Scheduling() {
+  const [markedDates, setMarkedDates] = useState<IMarkedDateProps>(
+    {} as IMarkedDateProps
+  );
+  const [lastSelectedDate, setLastSelectedDate] = useState<IDayProps>(
+    {} as IDayProps
+  );
   const theme = useTheme();
-
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
   function handleConfirmRental() {
     navigation.navigate("SchedulingDetails");
     // navigation.navigate("CarDetails" as never);
+  }
+
+  function handleBack() {
+    navigation.goBack();
+  }
+
+  function handleChangeDate(date: IDayProps) {
+    let start = !lastSelectedDate.timestamp ? date : lastSelectedDate;
+    let end = date;
+
+    if (start.timestamp > end.timestamp) {
+      start = end;
+      end = start;
+    }
+
+    setLastSelectedDate(end);
+    const interval = generateInterval(start, end);
+    setMarkedDates(interval);
   }
 
   return (
@@ -43,7 +67,7 @@ export default function Scheduling() {
           translucent
           backgroundColor="transparent"
         />
-        <BackButton onPress={() => {}} color={theme.colors.shape} />
+        <BackButton onPress={handleBack} color={theme.colors.shape} />
 
         <Title>
           Escolha uma {"\n"}
@@ -67,7 +91,7 @@ export default function Scheduling() {
       </Header>
 
       <Content>
-        <Calendar />
+        <Calendar markedDates={markedDates} onDayPress={handleChangeDate} />
       </Content>
 
       <Footer>
