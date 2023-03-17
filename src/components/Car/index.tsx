@@ -21,12 +21,15 @@ import {
 } from "react-native-gesture-handler";
 
 import { CarDTO } from "../../dtos/CarDTO";
+import { getAccessoryIcon } from "../../ultils/getAccessoryIcon";
 
 interface ICar extends RectButtonProps {
   data: CarDTO;
 }
 
 export default function Car({ data, ...rest }: ICar) {
+  const MotorIcon = getAccessoryIcon(data.fuel_type);
+
   return (
     <GestureHandlerRootView>
       <Container {...rest}>
@@ -41,7 +44,7 @@ export default function Car({ data, ...rest }: ICar) {
             </Rent>
 
             <Type>
-              <GasolineSvg />
+              <MotorIcon />
             </Type>
           </About>
         </Details>

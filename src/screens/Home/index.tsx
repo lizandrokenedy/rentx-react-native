@@ -35,9 +35,8 @@ export default function Home() {
     fetchCars();
   }, []);
 
-  function handleCarDetails() {
-    console.log("clicou");
-    // navigation.navigate("CarDetails");
+  function handleCarDetails(car: CarDTO) {
+    navigation.navigate("CarDetails", { car });
     // navigation.navigate("CarDetails" as never);
   }
 
@@ -62,7 +61,7 @@ export default function Home() {
           data={cars}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <Car data={item} onPress={handleCarDetails} />
+            <Car data={item} onPress={() => handleCarDetails(item)} />
           )}
         />
       )}
