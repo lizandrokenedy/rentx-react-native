@@ -1,19 +1,31 @@
 import React from "react";
-import Accessory from "../../components/Accessory";
-import BackButton from "../../components/BackButton";
-import ImageSlider from "../../components/ImageSlider";
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  interpolate,
+  Extrapolate,
+} from "react-native-reanimated";
 import {
   ParamListBase,
   NavigationProp,
   useNavigation,
   useRoute,
 } from "@react-navigation/native";
+import { StatusBar, StyleSheet } from "react-native";
+import { getStatusBarHeight } from "react-native-iphone-x-helper";
+import { CarDTO } from "../../dtos/CarDTO";
+import { getAccessoryIcon } from "../../ultils/getAccessoryIcon";
+import { useTheme } from "styled-components/native";
+
+import Accessory from "../../components/Accessory";
+import BackButton from "../../components/BackButton";
+import ImageSlider from "../../components/ImageSlider";
 
 import {
   Container,
   Header,
   CarImages,
-  Content,
   Details,
   Description,
   Brand,
@@ -26,17 +38,39 @@ import {
   Footer,
 } from "./styles";
 import Button from "../../components/Button";
-import { CarDTO } from "../../dtos/CarDTO";
-import { getAccessoryIcon } from "../../ultils/getAccessoryIcon";
 
 interface Params {
   car: CarDTO;
 }
 
 export default function CarDetails() {
+  const theme = useTheme();
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const route = useRoute();
   const { car } = route.params as Params;
+
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+    console.log(event.contentOffset.y);
+  });
+
+  const headerStyleAnimation = useAnimatedStyle(() => {
+    return {
+      height: interpolate(
+        scrollY.value,
+        [0, 200],
+        [200, 70],
+        Extrapolate.CLAMP
+      ),
+    };
+  });
+
+  const sliderCarsStyleAnimation = useAnimatedStyle(() => {
+    return {
+      opacity: interpolate(scrollY.value, [0, 150], [1, 0], Extrapolate.CLAMP),
+    };
+  });
 
   function handleConfirmRental() {
     navigation.navigate("Scheduling", { car });
@@ -49,15 +83,37 @@ export default function CarDetails() {
 
   return (
     <Container>
-      <Header>
-        <BackButton onPress={handleBack} />
-      </Header>
+      <StatusBar
+        barStyle="dark-content"
+        translucent
+        backgroundColor="transparent"
+      />
+      <Animated.View
+        style={[
+          headerStyleAnimation,
+          styles.header,
+          { backgroundColor: theme.colors.background_secondary },
+        ]}
+      >
+        <Header>
+          <BackButton onPress={handleBack} />
+        </Header>
+        <Animated.View style={[sliderCarsStyleAnimation]}>
+          <CarImages>
+            <ImageSlider imagesUrl={car.photos} />
+          </CarImages>
+        </Animated.View>
+      </Animated.View>
 
-      <CarImages>
-        <ImageSlider imagesUrl={car.photos} />
-      </CarImages>
-
-      <Content>
+      <Animated.ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          paddingTop: getStatusBarHeight() + 160,
+        }}
+        showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+      >
         <Details>
           <Description>
             <Brand>{car.brand}</Brand>
@@ -80,8 +136,14 @@ export default function CarDetails() {
           ))}
         </Accessories>
 
-        <About>{car.about}</About>
-      </Content>
+        <About>
+          {car.about}
+          {car.about}
+          {car.about}
+          {car.about}
+          {car.about}
+        </About>
+      </Animated.ScrollView>
 
       <Footer>
         <Button title="Confirmar" onPress={handleConfirmRental} />
@@ -89,3 +151,14 @@ export default function CarDetails() {
     </Container>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    position: "absolute",
+    overflow: "hidden",
+    zIndex: 1,
+  },
+  back: {
+    marginTop: 24,
+  },
+});
